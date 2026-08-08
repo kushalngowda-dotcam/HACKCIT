@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Upload, MapPin, Sparkles, AlertCircle, Image as ImageIcon, Camera, Navigation, RefreshCw } from 'lucide-react';
 import { analyzeIncidentReport, verifyIncidentReport, calculatePriorityScore } from '../services/aiEngine';
 import { AIAnalysisResult, Incident } from '../types';
@@ -29,9 +29,11 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(
     DISASTER_IMAGES.buildingCollapse
   );
-  
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisResult | null>(null);
+
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Request browser GPS position immediately on open
   useEffect(() => {
@@ -242,23 +244,37 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
             {/* Image / Video Media Upload Preview */}
             <div>
               <label className="block text-xs font-mono text-slate-300 mb-1">UPLOAD VISUAL EVIDENCE (PHOTO / VIDEO)</label>
-              <div className="flex items-center space-x-4">
-                {selectedImage && (
-                  <div className="w-24 h-24 rounded-xl overflow-hidden border border-slate-700 relative group shrink-0">
-                    <img src={selectedImage} alt="Emergency preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <Camera className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                )}
+              <div className="flex items-center gap-3">
 
-                <label className="flex-1 border-2 border-dashed border-slate-700 hover:border-cyan-500/60 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-colors bg-slate-900/60">
-                  <Upload className="w-6 h-6 text-cyan-400 mb-1" />
-                  <span className="text-xs text-slate-300 font-medium">Click to select image or drag & drop</span>
-                  <span className="text-[10px] text-slate-500 font-mono mt-0.5">JPG, PNG, MP4 up to 50MB</span>
+
+                <label className="flex-1 border-2 border-dashed border-slate-700 hover:border-cyan-500/60 rounded-xl px-4 py-3 flex flex-col items-center justify-center cursor-pointer transition-colors bg-slate-900/60 text-center">
+                  <Upload className="w-5 h-5 text-cyan-400 mb-1" />
+                  <span className="text-xs text-slate-300 font-medium">Upload image / video</span>
+                  <span className="text-[10px] text-slate-500 font-mono mt-0.5">or drag & drop</span>
                   <input type="file" accept="image/*,video/*" onChange={handleImageUpload} className="hidden" />
                 </label>
+
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="w-24 h-24 shrink-0 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 hover:from-cyan-500/30 hover:to-blue-600/30 text-cyan-300 text-xs font-bold transition-all shadow-md cursor-pointer"
+                >
+                  <Camera className="w-6 h-6" />
+                  <span>Open<br />Camera</span>
+                </button>
               </div>
+
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <p className="text-[10px] text-slate-500 font-mono mt-1.5">
+                Opens your device camera directly — captured photo is attached automatically. Fallback to gallery if camera permission is denied.
+              </p>
             </div>
 
             {/* Submit AI Analysis Button */}
@@ -284,11 +300,11 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            <AIAnalysisCard 
-              analysis={aiAnalysis} 
-              onConfirmSubmit={handleConfirmSubmit} 
+            <AIAnalysisCard
+              analysis={aiAnalysis}
+              onConfirmSubmit={handleConfirmSubmit}
             />
-            
+
             <button
               onClick={() => setAiAnalysis(null)}
               className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs"
