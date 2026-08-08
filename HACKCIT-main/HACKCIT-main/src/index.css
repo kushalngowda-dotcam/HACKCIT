@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Horizontal overflow safety net — nothing should push past the viewport */
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  #root {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  img,
+  video,
+  svg,
+  canvas,
+  table {
+    max-width: 100%;
+  }
+
+  /* Let flex/grid children shrink instead of overflowing their container */
+  .min-w-0-c {
+    min-width: 0;
+  }
+}
+
+/* Hide horizontal scrollbar on chip rows / mobile tab bars */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0891b2;
+}
+
+/* EOC Card Styles - Premium Light Theme */
+.eoc-card {
+  background: #ffffff;
+  backdrop-filter: blur(12px);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+.eoc-card-glow-cyan {
+  background: #f0fdfa;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(8, 145, 178, 0.3);
+  box-shadow: 0 0 15px rgba(8, 145, 178, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.eoc-card-glow-red {
+  background: #fef2f2;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.eoc-card-glow-amber {
+  background: #fffbeb;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  box-shadow: 0 0 15px rgba(217, 119, 6, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Pulsating Severity Rings */
+@keyframes pulseRing {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 0.2; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.marker-pulse-critical {
+  animation: pulseRing 1.5s ease-out infinite;
+}
+
+.marker-pulse-high {
+  animation: pulseRing 2.2s ease-out infinite;
+}
+
+/* Radar Scan Line Effect */
+.radar-grid {
+  background-image: 
+    radial-gradient(rgba(8, 145, 178, 0.04) 1px, transparent 1px),
+    linear-gradient(to right, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px, 40px 40px, 40px 40px;
+}
+
+/* Leaflet Map Container */
+.leaflet-container {
+  background: #f1f5f9 !important;
+  font-family: 'Inter', sans-serif !important;
+  z-index: 1 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;
+  border-radius: 12px !important;
+}
+
+.leaflet-popup-tip {
+  background: #ffffff !important;
+}
+
+/* Custom Timeline Range Slider - thumb centered on the cyan track */
+.range-slider-cyan {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #22d3ee 0%, #0e7490 var(--fill, 0%), #0f172a var(--fill, 0%), #0f172a 100%);
+  outline: none;
+  cursor: pointer;
+}
+
+.range-slider-cyan::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #f8fafc;
+  border: 3px solid #06b6d4;
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.25), 0 2px 6px rgba(0, 0, 0, 0.4);
+  margin-top: 0;
+  transition: transform 0.15s ease;
+}
+
+.range-slider-cyan::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.range-slider-cyan::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #f8fafc;
+  border: 3px solid #06b6d4;
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.25), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.range-slider-cyan::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #22d3ee 0%, #0e7490 var(--fill, 0%), #0f172a var(--fill, 0%), #0f172a 100%);
+}
+
+.range-slider-cyan::-moz-range-progress {
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #22d3ee, #0e7490);
+}

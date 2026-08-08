@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "cgraph": {
+      "type": "local",
+      "command": [
+        "cgraph",
+        "serve",
+        "--root",
+        "G:/Hackathon/CIT(MANDYA) 8-08-2026"
+      ],
+      "enabled": true
+    }
+  }
+}
