@@ -135,23 +135,23 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Main Navigation Bar */}
-      <div className="px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
+      <div className="px-3 sm:px-4 py-2 flex items-center justify-between gap-2 w-full max-w-full overflow-hidden">
         {/* Brand Logo & Tagline */}
         <div 
           onClick={() => setCurrentTab('landing')}
-          className="flex items-center space-x-2 cursor-pointer group shrink-0"
+          className="flex items-center space-x-2 cursor-pointer group min-w-0 shrink-0"
         >
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-teal-500 via-blue-600 to-red-500 p-0.5 shadow-lg shadow-teal-200/40 group-hover:shadow-teal-300/50 transition-all">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-teal-500 via-blue-600 to-red-500 p-0.5 shadow-lg shadow-teal-200/40 group-hover:shadow-teal-300/50 transition-all shrink-0">
             <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center">
               <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 group-hover:scale-110 transition-transform" />
             </div>
           </div>
-          <div>
+          <div className="min-w-0 truncate">
             <div className="flex items-center space-x-1.5">
-              <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-800">
+              <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-800 truncate">
                 DisasterX <span className="text-teal-600">AI</span>
               </span>
-              <span className="bg-teal-50 text-teal-600 border border-teal-200 text-[10px] font-mono px-1.5 py-0.2 rounded">
+              <span className="bg-teal-50 text-teal-600 border border-teal-200 text-[10px] font-mono px-1.5 py-0.2 rounded shrink-0">
                 OS
               </span>
             </div>
@@ -263,12 +263,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 else if (role === 'ADMINISTRATOR') setCurrentTab('admin');
               }}
               aria-label="Select role"
-              className="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg pl-3 pr-2.5 py-1.5 focus:ring-1 focus:ring-teal-500 focus:outline-none cursor-pointer shadow-sm font-semibold max-w-[128px] sm:max-w-[190px] truncate"
+              className="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg pl-2 pr-1.5 py-1.5 focus:ring-1 focus:ring-teal-500 focus:outline-none cursor-pointer shadow-sm font-semibold w-[104px] sm:w-[auto] sm:max-w-[190px] truncate"
             >
-              <option value="COORDINATOR">Role: EOC Coordinator</option>
-              <option value="CITIZEN">Role: Citizen User</option>
-              <option value="RESPONDER">Role: Field Responder</option>
-              <option value="ADMINISTRATOR">Role: Administrator</option>
+              <option value="COORDINATOR">EOC Coordinator</option>
+              <option value="CITIZEN">Citizen</option>
+              <option value="RESPONDER">Responder</option>
+              <option value="ADMINISTRATOR">Admin</option>
             </select>
           </div>
         </div>
