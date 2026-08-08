@@ -1,13 +1,9 @@
 import React from 'react';
-import { Shield, LogOut, Bot } from 'lucide-react';
+import { Shield, LogOut, User, Cpu } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Badge } from './Badge';
 
-interface HeaderProps {
-  onOpenAssistant?: () => void;
-}
-
-export const Header: React.FC<HeaderProps> = ({ onOpenAssistant }) => {
+export const Header: React.FC = () => {
   const { user, profile, role, signOut } = useAuth();
 
   return (
@@ -38,18 +34,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAssistant }) => {
             <div className="text-xs font-semibold text-slate-200">{profile?.full_name || user?.email || `Authenticated ${role}`}</div>
             <div className="text-[10px] text-slate-400 font-mono">Role: {role}</div>
           </div>
-
-          {onOpenAssistant && (
-            <button
-              onClick={onOpenAssistant}
-              title="Open DisasterX AI assistant"
-              className="px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800 text-cyan-300 hover:text-cyan-200 transition-colors text-xs font-bold flex items-center gap-1.5"
-            >
-              <Bot className="w-3.5 h-3.5" />
-              <span>AI Assistant</span>
-            </button>
-          )}
-
           <button
             onClick={signOut}
             title="Sign Out to Role Selection Landing Page"

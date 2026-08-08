@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bot, X, Send, Sparkles, ShieldCheck } from 'lucide-react';
+import { Bot, X, Send } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import { queryAIAssistant } from '../../services/aiAssistant';
 import { HospitalCapacity, Incident, Resource } from '../../types/database';
 
@@ -18,6 +19,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({
   resources,
   hospitals,
 }) => {
+  const { role } = useAuth();
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string }>>([
     {
@@ -45,7 +47,13 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({
     setIsLoading(true);
 
     try {
-      const responseText = await queryAIAssistant(q, { incidents, resources, hospitals });
+      const responseText = await queryAIAssistant(q, {
+        incidents,
+        resources,
+        hospitals,
+        role,
+        history: messages,
+      });
       setMessages((prev) => [...prev, { sender: 'ai', text: responseText }]);
     } catch (error) {
       console.warn('[AI Assistant] Request failed:', error);

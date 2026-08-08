@@ -1,4 +1,4 @@
-import React, { Component, ReactNode, useState } from 'react';
+import React, { Component, ReactNode } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { Header } from './components/common/Header';
 import { OfflineBanner } from './components/common/OfflineBanner';
@@ -10,10 +10,6 @@ import { CommanderDashboard } from './features/commander/CommanderDashboard';
 import { AdminDashboard } from './features/admin/AdminDashboard';
 import { Shield, Info, Radio, Database, AlertTriangle, RefreshCw } from 'lucide-react';
 import { isSupabaseConfigured } from './lib/supabase';
-import { useIncidents } from './hooks/useIncidents';
-import { useResources } from './hooks/useResources';
-import { useHospitals } from './hooks/useHospitals';
-import { AIAssistantDrawer } from './components/ai/AIAssistantDrawer';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -71,10 +67,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
 const AppContent: React.FC = () => {
   const { role, isAuthenticated } = useAuth();
-  const { incidents } = useIncidents();
-  const { resources } = useResources();
-  const { hospitalCapacities } = useHospitals();
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   // If user is not authenticated, show the Auth / Role selection landing page!
   if (!isAuthenticated) {
@@ -104,7 +96,7 @@ const AppContent: React.FC = () => {
       <OfflineBanner />
 
       {/* Primary Top Header with User Info & Sign Out */}
-      <Header onOpenAssistant={() => setIsAssistantOpen(true)} />
+      <Header />
 
       {/* Supabase Environment Warning Banner if unconfigured */}
       {!isSupabaseConfigured && (
@@ -124,14 +116,6 @@ const AppContent: React.FC = () => {
           {renderRoleDashboard()}
         </ErrorBoundary>
       </main>
-
-      <AIAssistantDrawer
-        isOpen={isAssistantOpen}
-        onClose={() => setIsAssistantOpen(false)}
-        incidents={incidents}
-        resources={resources}
-        hospitals={hospitalCapacities}
-      />
 
       {/* Footer */}
       <footer className="bg-slate-900 border-t border-slate-800 p-6 text-xs text-slate-400">
