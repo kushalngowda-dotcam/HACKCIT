@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Incident, 
   Resource, 
@@ -11,19 +11,15 @@ import {
   ResourceStatus,
   AIRiskZone
 } from './types';
-import { 
-  INITIAL_INCIDENTS, 
-  INITIAL_RESOURCES, 
-  INITIAL_HOSPITALS, 
-  INITIAL_SHELTERS, 
-  INITIAL_BLOCKAGES, 
-  INITIAL_ROUTES, 
-  INITIAL_ALERTS,
-  INITIAL_RISK_ZONES
-} from './data/mockData';
-import { realtimeSync } from './lib/supabaseClient';
+import { realtimeSync, supabaseEnabled } from './lib/supabaseClient';
+import {
+  loadAllState,
+  saveCollection,
+  subscribeAll,
+  resetAllState,
+  AppCollectionKey
+} from './lib/supabaseRepo';
 import { optimizeResourceAssignments } from './services/aiEngine';
-import { DISASTER_IMAGES } from './utils/svgImages';
 
 import { AIUncertaintyCard } from './components/AIUncertaintyCard';
 import { CounterfactualSimulatorView } from './components/CounterfactualSimulatorView';
@@ -53,22 +49,23 @@ import { AIRiskAssessmentModal } from './components/AIRiskAssessmentModal';
 import { ResourceDigitalTwinModal } from './components/ResourceDigitalTwinModal';
 import { ResponseChallengeModal } from './components/ResponseChallengeModal';
 import { AIAssistantDrawer } from './components/AIAssistantDrawer';
-import { DemoController } from './components/DemoController';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<string>('landing');
   const [activeRole, setActiveRole] = useState<UserRole>('COORDINATOR');
+  const [isHydrated, setIsHydrated] = useState<boolean>(false);
+  const [syncStatus, setSyncStatus] = useState<'connecting' | 'synced' | 'local'>('connecting');
 
-  // Application Telemetry State
-  const [incidents, setIncidents] = useState<Incident[]>(INITIAL_INCIDENTS);
-  const [resources, setResources] = useState<Resource[]>(INITIAL_RESOURCES);
-  const [hospitals, setHospitals] = useState<Hospital[]>(INITIAL_HOSPITALS);
-  const [shelters, setShelters] = useState<Shelter[]>(INITIAL_SHELTERS);
-  const [blockages, setBlockages] = useState<RoadBlockage[]>(INITIAL_BLOCKAGES);
-  const [routes, setRoutes] = useState<EvacuationRoute[]>(INITIAL_ROUTES);
-  const [alerts, setAlerts] = useState<AlertNotification[]>(INITIAL_ALERTS);
+  // Application Telemetry State (Starts empty, populated exclusively from Supabase DB)
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [shelters, setShelters] = useState<Shelter[]>([]);
+  const [blockages, setBlockages] = useState<RoadBlockage[]>([]);
+  const [routes, setRoutes] = useState<EvacuationRoute[]>([]);
+  const [alerts, setAlerts] = useState<AlertNotification[]>([]);
 
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(INITIAL_INCIDENTS[0]);
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedRiskZone, setSelectedRiskZone] = useState<AIRiskZone | null>(null);
   const [selectedResourceTwin, setSelectedResourceTwin] = useState<Resource | null>(null);
 
@@ -79,7 +76,108 @@ export function App() {
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState<boolean>(false);
   const [isChallengeOpen, setIsChallengeOpen] = useState<boolean>(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
-  const [isDemoOpen, setIsDemoOpen] = useState<boolean>(false);
+
+  const isHydratedRef = useRef(false);
+  const lastWrittenRef = useRef<Record<AppCollectionKey, string>>({} as Record<AppCollectionKey, string>);
+
+  // Collection registry: key -> [current rows, setter]
+  const collections: { key: AppCollectionKey; rows: unknown[]; set: (rows: unknown[]) => void }[] = [
+    { key: 'incidents', rows: incidents, set: (v) => setIncidents(v as Incident[]) },
+    { key: 'resources', rows: resources, set: (v) => setResources(v as Resource[]) },
+    { key: 'hospitals', rows: hospitals, set: (v) => setHospitals(v as Hospital[]) },
+    { key: 'shelters', rows: shelters, set: (v) => setShelters(v as Shelter[]) },
+    { key: 'blockages', rows: blockages, set: (v) => setBlockages(v as RoadBlockage[]) },
+    { key: 'routes', rows: routes, set: (v) => setRoutes(v as EvacuationRoute[]) },
+    { key: 'alerts', rows: alerts, set: (v) => setAlerts(v as AlertNotification[]) }
+  ];
+
+  // Hydrate from Supabase on mount
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateOnce = async (): Promise<'synced' | 'offline'> => {
+      const res = await loadAllState();
+      if (cancelled) return 'offline';
+      if (!res) return 'offline';
+      const { snapshot, reachable } = res;
+      collections.forEach(({ key, set }) => {
+        const remote = snapshot[key];
+        if (Array.isArray(remote)) {
+          set(remote);
+        }
+      });
+      return reachable ? 'synced' : 'offline';
+    };
+
+    (async () => {
+      let status = await hydrateOnce();
+      let attempt = 0;
+      while (status === 'offline' && attempt < 5) {
+        await new Promise(r => setTimeout(r, 2000));
+        if (cancelled) return;
+        attempt += 1;
+        status = await hydrateOnce();
+      }
+      if (cancelled) return;
+      setSyncStatus(status === 'synced' ? 'synced' : 'local');
+      isHydratedRef.current = true;
+      setIsHydrated(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced persistence of every collection (only after hydration completes)
+  useEffect(() => {
+    if (!isHydrated || !supabaseEnabled) return;
+    const timers = new Map<AppCollectionKey, ReturnType<typeof setTimeout>>();
+
+    collections.forEach(({ key, rows }) => {
+      const serialized = JSON.stringify(rows);
+      if (lastWrittenRef.current[key] === serialized) return;
+      const timer = setTimeout(() => {
+        lastWrittenRef.current[key] = serialized;
+        saveCollection(key, rows).then(ok => {
+          if (ok) setSyncStatus('synced');
+        });
+      }, 400);
+      timers.set(key, timer);
+    });
+
+    return () => {
+      timers.forEach(t => clearTimeout(t));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incidents, resources, hospitals, shelters, blockages, routes, alerts, isHydrated]);
+
+  // Realtime subscription: merge remote rows into local state across browser tabs
+  useEffect(() => {
+    if (!supabaseEnabled) return;
+    const unsubscribe = subscribeAll((key, rows) => {
+      if (!isHydratedRef.current) return;
+      if (lastWrittenRef.current[key] === JSON.stringify(rows)) return;
+      const entry = collections.find(c => c.key === key);
+      if (entry) entry.set(rows);
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated]);
+
+  const handleResetData = useCallback(async () => {
+    await resetAllState();
+    setIncidents([]);
+    setResources([]);
+    setHospitals([]);
+    setShelters([]);
+    setBlockages([]);
+    setRoutes([]);
+    setAlerts([]);
+    setSelectedIncident(null);
+    lastWrittenRef.current = {} as Record<AppCollectionKey, string>;
+  }, []);
 
   // Subscribe to Realtime state updates
   useEffect(() => {
@@ -109,11 +207,11 @@ export function App() {
     setIsDetailModalOpen(true);
     realtimeSync.broadcast('incidents_update', newIncident);
     
-    // Auto-broadcast emergency alert
+    // Broadcast emergency alert
     const newAlert: AlertNotification = {
       id: `alt-${Date.now()}`,
       title: `NEW REPORT: ${newIncident.title}`,
-      message: `AI Confidence ${newIncident.confidence}%. ${newIncident.people_at_risk} citizens at risk in ${newIncident.location.area}.`,
+      message: `Confidence ${newIncident.confidence}%. ${newIncident.people_at_risk} citizens at risk in ${newIncident.location.area}.`,
       severity: newIncident.severity,
       timestamp: new Date().toLocaleTimeString(),
       read: false
@@ -151,64 +249,28 @@ export function App() {
     }));
   };
 
-  // Demo Disaster Simulator Trigger (Step 3 of Demo)
-  const handleTriggerDemoDisaster = () => {
-    const demoInc: Incident = {
-      id: `inc-demo-${Date.now()}`,
-      title: 'CRITICAL: Severe Metro Bridge Shear & Submerged Express Corridor',
-      description: 'Torrential 180mm rain triggered catastrophic drainage overflow. Metro pillar 142 structural shear detected. 14 vehicles submerged, 95 citizens trapped.',
-      incident_type: 'Building Collapse',
-      severity: 'CRITICAL',
-      status: 'VERIFIED',
-      priority_score: 98,
-      confidence: 96,
-      verification_status: 'VERIFIED',
-      verification_score: 97,
-      people_at_risk: 145,
-      location: {
-        lat: 12.9780,
-        lng: 77.6100,
-        address: 'Old Airport Road Flyover Substructure',
-        area: 'Central-East Corridor'
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      image_url: DISASTER_IMAGES.buildingCollapse,
-      detected_hazards: ['Structural Shear', 'Rapid Flood Inundation', 'Submerged High-Voltage Lines'],
-      infrastructure_damage: ['Pillar Load Fracture', 'Arterial Highway Blocked'],
-      recommended_resources: [
-        { type: 'RESCUE_TEAM', count: 4 },
-        { type: 'RESCUE_BOAT', count: 3 },
-        { type: 'AMBULANCE', count: 4 }
-      ],
-      recommended_actions: [
-        'Deploy heavy USAR hydraulic breaching team immediately',
-        'Launch inflatable rescue craft convoy',
-        'Divert all inbound traffic to Indiranagar bypass'
-      ],
-      assigned_resources: ['res-201', 'res-101'],
-      eta_minutes: 4,
-      reasoning: 'Critical high-density structural & flood surge compound disaster with high survivor density.'
-    };
-
-    setIncidents(prev => [demoInc, ...prev]);
-    setSelectedIncident(demoInc);
-    setIsDetailModalOpen(true);
-
-    const demoAlert: AlertNotification = {
-      id: `alt-demo-${Date.now()}`,
-      title: '⚡ CRITICAL DEMO ESCALATION: Metro Pillar Shear & Flood Surge',
-      message: 'Old Airport Road bridge shear detected. 145 citizens exposed. Priority Score 98/100.',
-      severity: 'CRITICAL',
-      timestamp: new Date().toLocaleTimeString(),
-      read: false
-    };
-    setAlerts(prev => [demoAlert, ...prev]);
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-teal-500 selection:text-white">
+    <div className="h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-teal-500 selection:text-white overflow-hidden">
       
+      {/* Sync Status Indicator */}
+      {syncStatus !== 'connecting' && (
+        <div className="fixed bottom-3 right-3 z-[3000] flex items-center space-x-2">
+          <button
+            onClick={handleResetData}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-800 text-white text-[10px] font-mono shadow-md hover:bg-slate-700 transition-colors cursor-pointer"
+            title="Clear all Supabase database rows"
+          >
+            Clear DB data
+          </button>
+          <div className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 shadow-md text-[10px] font-mono flex items-center space-x-1.5">
+            <span className={`w-2 h-2 rounded-full ${syncStatus === 'synced' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+            <span className={syncStatus === 'synced' ? 'text-emerald-600' : 'text-amber-600'}>
+              {syncStatus === 'synced' ? '● Synced (Supabase)' : 'Local-only'}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Navigation Header Bar */}
       <Navbar
         currentTab={currentTab}
@@ -217,18 +279,16 @@ export function App() {
         setActiveRole={setActiveRole}
         onOpenReportModal={() => setIsReportModalOpen(true)}
         onToggleAssistant={() => setIsAssistantOpen(prev => !prev)}
-        onStartDemo={() => setIsDemoOpen(true)}
         onOpenChallenge={() => setIsChallengeOpen(true)}
         onOpenCrisisMode={() => setIsCrisisModeOpen(true)}
         alertCount={alerts.filter(a => !a.read).length}
       />
 
       {/* Main Tab View Router */}
-      <div className="flex-1">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         {currentTab === 'landing' && (
           <LandingPage
             onLaunchCommandCenter={() => setCurrentTab('command-center')}
-            onStartDemo={() => setIsDemoOpen(true)}
             incidents={incidents}
             resources={resources}
           />
@@ -277,7 +337,7 @@ export function App() {
         )}
 
         {currentTab === 'multi-agent' && (
-          <MultiAgentView />
+          <MultiAgentView incidents={incidents} resources={resources} />
         )}
 
         {currentTab === 'what-if' && (
@@ -382,17 +442,6 @@ export function App() {
         incidents={incidents}
         resources={resources}
         hospitals={hospitals}
-      />
-
-      {/* 3-Minute Hackathon Demo Interactive Controller */}
-      <DemoController
-        isOpen={isDemoOpen}
-        onClose={() => setIsDemoOpen(false)}
-        onJumpToTab={(t) => setCurrentTab(t)}
-        onTriggerDisaster={handleTriggerDemoDisaster}
-        onSimulateAllocation={handleTriggerSimulatedAllocation}
-        onOpenCrisisMode={() => setIsCrisisModeOpen(true)}
-        onOpenChallenge={() => setIsChallengeOpen(true)}
       />
 
     </div>

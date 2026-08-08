@@ -35,7 +35,7 @@ export const AIRiskAssessmentModal: React.FC<AIRiskAssessmentModalProps> = ({
   return (
     <>
       <div className="fixed inset-0 z-[3400] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto font-sans">
-        <div className="bg-white max-w-lg w-full rounded-2xl border-2 border-red-500 shadow-2xl p-6 relative my-8 space-y-4 animate-in zoom-in-95 duration-200">
+        <div className="bg-white max-w-lg w-full rounded-2xl border-2 border-red-500 shadow-2xl p-6 relative m-auto space-y-4 animate-in zoom-in-95 duration-200">
           
           {/* Close Button */}
           <button

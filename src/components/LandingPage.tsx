@@ -20,14 +20,13 @@ import { Incident, Resource } from '../types';
 
 interface LandingPageProps {
   onLaunchCommandCenter: () => void;
-  onStartDemo: () => void;
+  onStartDemo?: () => void;
   incidents: Incident[];
   resources: Resource[];
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onLaunchCommandCenter,
-  onStartDemo,
   incidents,
   resources
 }) => {
@@ -36,7 +35,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const resourcesDeployed = resources.filter(r => r.status === 'DISPATCHED' || r.status === 'EN_ROUTE' || r.status === 'ON_SITE').length;
 
   return (
-    <div className="relative min-h-[calc(100vh-65px)] bg-gradient-to-br from-slate-50 via-white to-teal-50/30 text-slate-900 overflow-hidden flex flex-col justify-between">
+    <div className="relative min-h-full bg-gradient-to-br from-slate-50 via-white to-teal-50/30 text-slate-900 overflow-x-hidden flex flex-col justify-between">
       {/* Background Subtle Grid */}
       <div className="absolute inset-0 radar-grid opacity-40 pointer-events-none"></div>
 
@@ -64,26 +63,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             "Turning Disaster Data into Life-Saving Decisions."
           </p>
           <p className="text-base sm:text-lg text-slate-500 max-w-3xl mx-auto leading-relaxed mb-10">
-            DisasterX AI is an intelligent emergency response operating system that aggregates fragmented disaster telemetry, utilizes multi-modal AI APIs to verify and prioritize incidents, calculates real-time evacuation routes, and coordinates autonomous multi-agent responder deployments.
+            DisasterX AI is an intelligent emergency response operating system that aggregates live disaster telemetry, utilizes multi-modal AI APIs to verify and prioritize incidents, calculates real-time evacuation routes, and coordinates multi-agent responder deployments.
           </p>
 
           {/* Action CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <button
               onClick={onLaunchCommandCenter}
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-400 hover:to-blue-500 text-white font-extrabold rounded-xl text-base transition-all shadow-xl shadow-teal-200/40 flex items-center justify-center space-x-3 group"
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-400 hover:to-blue-500 text-white font-extrabold rounded-xl text-base transition-all shadow-xl shadow-teal-200/40 flex items-center justify-center space-x-3 group cursor-pointer"
             >
               <ShieldAlert className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              <span>LAUNCH COMMAND CENTER</span>
+              <span>LAUNCH LIVE COMMAND CENTER</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            <button
-              onClick={onStartDemo}
-              className="w-full sm:w-auto px-7 py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold rounded-xl text-base transition-all flex items-center justify-center space-x-2 shadow-sm"
-            >
-              <Play className="w-4 h-4 text-red-500 fill-current" />
-              <span>3-MINUTE DEMO PRESENTATION</span>
             </button>
           </div>
         </div>

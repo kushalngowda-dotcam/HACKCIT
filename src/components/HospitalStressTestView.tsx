@@ -66,7 +66,7 @@ export const HospitalStressTestView: React.FC<HospitalStressTestViewProps> = ({ 
   };
 
   return (
-    <div className="min-h-[calc(100vh-65px)] bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
+    <div className="min-h-full bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
       
       {/* Header Banner */}
       <div className="eoc-card p-6 rounded-2xl border border-slate-800 space-y-2">
@@ -74,7 +74,7 @@ export const HospitalStressTestView: React.FC<HospitalStressTestViewProps> = ({ 
           <HeartPulse className="w-4 h-4 text-red-500 animate-pulse" />
           <span>TRAUMA NETWORK CAPACITY SIMULATOR</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-white">Hospital Stress Test Simulator</h1>
+        <h1 className="text-2xl font-extrabold text-slate-800">Hospital Stress Test Simulator</h1>
         <p className="text-xs text-slate-400 max-w-3xl">
           Simulate massive mass-casualty surge events to stress test regional trauma hospital bed capacity, ICU pressure, and ambulance diversion routing.
         </p>

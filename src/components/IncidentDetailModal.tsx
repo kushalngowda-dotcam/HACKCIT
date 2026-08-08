@@ -44,7 +44,7 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   return (
     <>
       <div className="fixed inset-0 z-[3000] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto font-sans">
-        <div className="bg-white max-w-3xl w-full rounded-2xl border border-slate-200 shadow-2xl p-6 relative my-8 space-y-5 animate-in fade-in duration-200">
+        <div className="bg-white max-w-3xl w-full rounded-2xl border border-slate-200 shadow-2xl p-6 relative m-auto space-y-5 animate-in fade-in duration-200">
           
           {/* Close Button */}
           <button

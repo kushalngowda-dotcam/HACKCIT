@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { getAgentSimulations } from '../services/aiEngine';
-import { AgentState } from '../types';
+import { Incident, Resource, AgentState } from '../types';
 import { Cpu, Sparkles, CheckCircle2, RefreshCw, ShieldCheck, Play, ArrowDown, HelpCircle, AlertTriangle } from 'lucide-react';
 import { ExplainableAIModal } from './ExplainableAIModal';
 
-export const MultiAgentView: React.FC = () => {
-  const [agents, setAgents] = useState<AgentState[]>(getAgentSimulations());
+interface MultiAgentViewProps {
+  incidents?: Incident[];
+  resources?: Resource[];
+}
+
+export const MultiAgentView: React.FC<MultiAgentViewProps> = ({ incidents = [], resources = [] }) => {
+  const [agents, setAgents] = useState<AgentState[]>(getAgentSimulations(incidents, resources));
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isConflictDemoActive, setIsConflictDemoActive] = useState<boolean>(false);
   const [showExplain, setShowExplain] = useState<boolean>(false);
@@ -16,7 +21,7 @@ export const MultiAgentView: React.FC = () => {
     const reset = agents.map(a => ({
       ...a,
       status: 'ANALYZING' as const,
-      thinking_log: ['Querying real-time EOC telemetry stream...']
+      thinking_log: ['Querying real-time DB telemetry stream...']
     }));
     setAgents(reset);
 
@@ -25,7 +30,7 @@ export const MultiAgentView: React.FC = () => {
       step++;
       if (step >= agents.length) {
         clearInterval(interval);
-        setAgents(getAgentSimulations());
+        setAgents(getAgentSimulations(incidents, resources));
         setIsRunning(false);
       } else {
         setAgents(prev => prev.map((ag, idx) => {
@@ -139,7 +144,7 @@ export const MultiAgentView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-65px)] bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
+    <div className="min-h-full bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 eoc-card p-6 rounded-2xl border border-slate-800">
@@ -148,7 +153,7 @@ export const MultiAgentView: React.FC = () => {
             <Cpu className="w-4 h-4" />
             <span>AUTONOMOUS MULTI-AGENT SWARM COORD</span>
           </div>
-          <h1 className="text-2xl font-extrabold text-white">AI Agent Conflict Resolution</h1>
+          <h1 className="text-2xl font-extrabold text-slate-800">AI Agent Conflict Resolution</h1>
           <p className="text-xs text-slate-400 max-w-2xl mt-1">
             Specialized logical AI agents (Medical, Search & Rescue, Logistics, Evacuation) operate in parallel. When recommendations collide, the Chief Coordinator Agent analyzes trade-offs and resolves resource conflicts.
           </p>

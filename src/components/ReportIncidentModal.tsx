@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { X, Upload, MapPin, Sparkles, AlertCircle, Image as ImageIcon, Camera } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Upload, MapPin, Sparkles, AlertCircle, Image as ImageIcon, Camera, Navigation, RefreshCw } from 'lucide-react';
 import { analyzeIncidentReport, verifyIncidentReport, calculatePriorityScore } from '../services/aiEngine';
 import { AIAnalysisResult, Incident } from '../types';
 import { AIAnalysisCard } from './AIAnalysisCard';
 import { DISASTER_IMAGES } from '../utils/svgImages';
+import { getGPSLocationWithAddress, DEFAULT_COORDINATES } from '../utils/geolocation';
 
 interface ReportIncidentModalProps {
   isOpen: boolean;
@@ -17,7 +18,13 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
   onAddIncident
 }) => {
   const [description, setDescription] = useState('');
-  const [address, setAddress] = useState('MG Road Metro Station Exit 2, Bengaluru');
+  const [address, setAddress] = useState('');
+  const [area, setArea] = useState('Central District');
+  const [lat, setLat] = useState<number>(DEFAULT_COORDINATES.lat);
+  const [lng, setLng] = useState<number>(DEFAULT_COORDINATES.lng);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
   const [incidentType, setIncidentType] = useState('Building Collapse');
   const [selectedImage, setSelectedImage] = useState<string | null>(
     DISASTER_IMAGES.buildingCollapse
@@ -26,7 +33,44 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisResult | null>(null);
 
+  // Request browser GPS position immediately on open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let mounted = true;
+    setIsLocating(true);
+    setLocationError(null);
+
+    getGPSLocationWithAddress().then((loc) => {
+      if (!mounted) return;
+      setLat(loc.lat);
+      setLng(loc.lng);
+      setAddress(loc.address);
+      setArea(loc.area);
+      if (loc.error) {
+        setLocationError(loc.error);
+      }
+      setIsLocating(false);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const handleRecenterGPS = async () => {
+    setIsLocating(true);
+    setLocationError(null);
+    const loc = await getGPSLocationWithAddress();
+    setLat(loc.lat);
+    setLng(loc.lng);
+    setAddress(loc.address);
+    setArea(loc.area);
+    if (loc.error) setLocationError(loc.error);
+    setIsLocating(false);
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,7 +109,7 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
 
     const newIncident: Incident = {
       id: `inc-${Date.now()}`,
-      title: `${aiAnalysis.incident_type} Emergency at ${address.split(',')[0]}`,
+      title: `${aiAnalysis.incident_type} Emergency at ${address.split(',')[0] || area}`,
       description,
       incident_type: aiAnalysis.incident_type,
       severity: aiAnalysis.severity,
@@ -76,10 +120,10 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
       verification_score: verification.score,
       people_at_risk: aiAnalysis.estimated_people_affected,
       location: {
-        lat: 12.9716 + (Math.random() - 0.5) * 0.05,
-        lng: 77.5946 + (Math.random() - 0.5) * 0.05,
-        address,
-        area: 'Central District'
+        lat,
+        lng,
+        address: address || `Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`,
+        area: area || 'Sector'
       },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -98,8 +142,8 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="eoc-card max-w-2xl w-full rounded-2xl border border-slate-700 shadow-2xl p-6 relative my-8">
+    <div className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto font-sans">
+      <div className="eoc-card max-w-2xl w-full rounded-2xl border border-slate-700 shadow-2xl p-6 relative m-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -115,43 +159,72 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
           </div>
           <div>
             <h2 className="text-xl font-extrabold text-white">AI Incident Reporting Engine</h2>
-            <p className="text-xs text-slate-400 font-mono">Upload multi-modal media & description for AI interpretation</p>
+            <p className="text-xs text-slate-400 font-mono">Live GPS Location Capture & Multi-Modal Visual Reporting</p>
           </div>
         </div>
 
         {!aiAnalysis ? (
           <div className="space-y-4">
-            {/* Incident Type & Location */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-mono text-slate-300 mb-1">INCIDENT CATEGORY</label>
-                <select
-                  value={incidentType}
-                  onChange={(e) => setIncidentType(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-cyan-500 focus:outline-none"
+            {/* Incident Category */}
+            <div>
+              <label className="block text-xs font-mono text-slate-300 mb-1">INCIDENT CATEGORY</label>
+              <select
+                value={incidentType}
+                onChange={(e) => setIncidentType(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-cyan-500 focus:outline-none"
+              >
+                <option value="Building Collapse">Building Collapse</option>
+                <option value="Urban Flooding">Urban Flooding</option>
+                <option value="Chemical Leak">Chemical Leak</option>
+                <option value="Fire Emergency">Fire Emergency</option>
+                <option value="Landslide">Landslide</option>
+                <option value="Power Grid Failure">Power Grid Failure</option>
+              </select>
+            </div>
+
+            {/* GPS Location & Address Capture */}
+            <div className="p-3.5 bg-slate-900/90 rounded-xl border border-slate-700 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono text-cyan-400 font-bold flex items-center space-x-1.5">
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>AUTOMATIC GPS LOCATION</span>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handleRecenterGPS}
+                  disabled={isLocating}
+                  className="px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-[11px] font-mono border border-cyan-500/30 flex items-center space-x-1 transition-colors"
                 >
-                  <option value="Building Collapse">Building Collapse</option>
-                  <option value="Urban Flooding">Urban Flooding</option>
-                  <option value="Chemical Leak">Chemical Leak</option>
-                  <option value="Fire Emergency">Fire Emergency</option>
-                  <option value="Landslide">Landslide</option>
-                  <option value="Power Grid Failure">Power Grid Failure</option>
-                </select>
+                  <RefreshCw className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
+                  <span>{isLocating ? 'Locating...' : 'Recenter GPS'}</span>
+                </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-mono text-slate-300 mb-1">LOCATION ADDRESS</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="relative">
-                  <MapPin className="w-4 h-4 text-cyan-400 absolute left-3 top-3" />
+                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   <input
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl pl-9 pr-3 py-2.5 focus:ring-1 focus:ring-cyan-500 focus:outline-none"
-                    placeholder="Enter street or area..."
+                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-lg pl-9 pr-3 py-2 focus:ring-1 focus:ring-cyan-500 focus:outline-none"
+                    placeholder="Reverse-geocoded address..."
                   />
                 </div>
+
+                <div className="flex items-center space-x-2 font-mono text-xs text-slate-300 bg-slate-950 px-3 py-2 rounded-lg border border-slate-800">
+                  <span className="text-slate-500 text-[10px]">COORDS:</span>
+                  <span>{lat.toFixed(4)}, {lng.toFixed(4)}</span>
+                </div>
               </div>
+
+              {locationError && (
+                <div className="text-[11px] text-amber-400 font-mono flex items-center space-x-1 mt-1">
+                  <AlertCircle className="w-3 h-3 shrink-0" />
+                  <span>{locationError}</span>
+                </div>
+              )}
             </div>
 
             {/* Description Area */}
@@ -198,7 +271,7 @@ export const ReportIncidentModal: React.FC<ReportIncidentModalProps> = ({
                 {isAnalyzing ? (
                   <>
                     <span className="w-4 h-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin mr-2"></span>
-                    <span>RUNNING AI VISION & NLP ANALYSIS...</span>
+                    <span>RUNNING AI ANALYSIS...</span>
                   </>
                 ) : (
                   <>

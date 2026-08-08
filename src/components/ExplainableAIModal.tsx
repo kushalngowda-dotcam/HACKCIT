@@ -17,7 +17,7 @@ export const ExplainableAIModal: React.FC<ExplainableAIModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[3500] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto font-sans">
-      <div className="bg-white max-w-lg w-full rounded-2xl border border-teal-200 shadow-2xl p-6 relative my-8 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white max-w-lg w-full rounded-2xl border border-teal-200 shadow-2xl p-6 relative m-auto space-y-4 animate-in fade-in zoom-in-95 duration-200">
         
         {/* Close Button */}
         <button

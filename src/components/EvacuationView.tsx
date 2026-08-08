@@ -41,10 +41,10 @@ export const EvacuationView: React.FC<EvacuationViewProps> = ({
   };
 
   return (
-    <div className="h-[calc(100vh-65px)] bg-slate-50 p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden font-sans">
+    <div className="h-full bg-slate-50 p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto overflow-x-hidden font-sans">
       
       {/* Left Sidebar Evacuation Controls (4 cols) */}
-      <div className="lg:col-span-4 flex flex-col h-full space-y-4 overflow-y-auto pr-1">
+      <div className="lg:col-span-4 flex flex-col lg:h-full lg:min-h-0 space-y-4 lg:overflow-y-auto lg:pr-1 pb-4 lg:pb-0">
         
         {/* Module Header */}
         <div className="eoc-card p-5 rounded-2xl space-y-3">
@@ -142,7 +142,7 @@ export const EvacuationView: React.FC<EvacuationViewProps> = ({
       </div>
 
       {/* Right Map Canvas (8 cols) */}
-      <div className="lg:col-span-8 h-full relative">
+      <div className="lg:col-span-8 lg:h-full relative min-h-[50vh] lg:min-h-0">
         <DisasterMap
           incidents={incidents}
           resources={[]}

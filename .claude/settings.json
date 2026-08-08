@@ -1,0 +1,16 @@
+{
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "cgraph"
+  ],
+  "permissions": {
+    "allow": [
+      "mcp__cgraph__status",
+      "mcp__cgraph__map",
+      "mcp__cgraph__find",
+      "mcp__cgraph__read",
+      "mcp__cgraph__graph",
+      "mcp__cgraph__docs"
+    ]
+  }
+}

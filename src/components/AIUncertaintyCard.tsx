@@ -255,8 +255,8 @@ export const AIUncertaintyCard: React.FC<AIUncertaintyCardProps> = ({
 
       {/* Confirm Information Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-[3800] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 font-sans">
-          <div className="bg-white max-w-md w-full rounded-2xl border-2 border-red-500 shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-[3800] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto font-sans">
+          <div className="bg-white max-w-md w-full rounded-2xl border-2 border-red-500 shadow-2xl p-6 m-auto space-y-4">
             <h3 className="font-black text-lg text-slate-900">Confirm Ground Truth Information</h3>
             <p className="text-xs text-slate-600">
               Provide ground truth telemetry for MG Road Metro Exit collapse site:

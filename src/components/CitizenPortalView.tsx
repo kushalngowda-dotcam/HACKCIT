@@ -28,7 +28,7 @@ export const CitizenPortalView: React.FC<CitizenPortalViewProps> = ({
   };
 
   return (
-    <div className="min-h-[calc(100vh-65px)] bg-[#070a10] p-4 max-w-md mx-auto space-y-5 font-sans">
+    <div className="min-h-full bg-[#070a10] p-4 max-w-md mx-auto space-y-5 font-sans">
       
       {/* Citizen Mobile Header */}
       <div className="text-center space-y-1 pt-2">
@@ -36,7 +36,7 @@ export const CitizenPortalView: React.FC<CitizenPortalViewProps> = ({
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>CITIZEN EMERGENCY ASSIST PORTAL</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-white">DisasterX SOS & Safety</h1>
+        <h1 className="text-2xl font-extrabold text-slate-800">DisasterX SOS & Safety</h1>
         <p className="text-xs text-slate-400">One-tap emergency beacon & verified shelter locator</p>
       </div>
 

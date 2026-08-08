@@ -40,7 +40,7 @@ export const WhatIfSimulatorView: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-[calc(100vh-65px)] bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-full bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       
       {/* Header */}
       <div className="eoc-card p-6 rounded-2xl border border-slate-800 space-y-2">
@@ -48,7 +48,7 @@ export const WhatIfSimulatorView: React.FC = () => {
           <Sliders className="w-4 h-4" />
           <span>PREEMPTIVE MONTE CARLO STRESS TEST</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-white">What-If Disaster Simulator</h1>
+        <h1 className="text-2xl font-extrabold text-slate-800">What-If Disaster Simulator</h1>
         <p className="text-xs text-slate-400 max-w-3xl">
           Adjust environmental parameters, weather extremes, road infrastructure damage, and hospital loads to trigger AI scenario simulations.
         </p>

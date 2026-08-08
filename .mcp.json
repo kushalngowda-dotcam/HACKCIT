@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "cgraph": {
+      "command": "cgraph",
+      "args": [
+        "serve",
+        "--root",
+        "G:/Hackathon/CIT(MANDYA) 8-08-2026"
+      ]
+    }
+  }
+}

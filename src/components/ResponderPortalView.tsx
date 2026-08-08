@@ -33,7 +33,7 @@ export const ResponderPortalView: React.FC<ResponderPortalViewProps> = ({
   };
 
   return (
-    <div className="min-h-[calc(100vh-65px)] bg-slate-50 p-4 max-w-2xl mx-auto space-y-5 font-sans">
+    <div className="min-h-full bg-slate-50 p-4 max-w-2xl mx-auto space-y-5 font-sans">
       
       {/* Header */}
       <div className="flex items-center justify-between eoc-card p-4 rounded-2xl border border-slate-200">

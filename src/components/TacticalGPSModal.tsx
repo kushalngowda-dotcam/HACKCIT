@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Incident, Resource } from '../types';
 import { X, Navigation, MapPin, ShieldCheck, Compass, AlertTriangle, CheckCircle2, Volume2 } from 'lucide-react';
 import { DisasterMap } from './DisasterMap';
+import { getCurrentGPSPosition, DEFAULT_COORDINATES } from '../utils/geolocation';
 
 interface TacticalGPSModalProps {
   isOpen: boolean;
@@ -21,17 +22,21 @@ export const TacticalGPSModal: React.FC<TacticalGPSModalProps> = ({
   onSelectIncident
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [speed, setSpeed] = useState(48);
-
-  const navigationSteps = [
-    { instruction: "Proceed North on Richmond Road towards CBD Bypass", distance: "400m" },
-    { instruction: "Turn Right onto Residency Road (Avoid MG Road metro debris)", distance: "1.2km" },
-    { instruction: "Merge onto Brigade Road Emergency Lane", distance: "600m" },
-    { instruction: "ARRIVING: MG Road Metro Station North Exit (Destination on Left)", distance: "200m" },
-  ];
+  const [speed, setSpeed] = useState(45);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number }>({
+    lat: DEFAULT_COORDINATES.lat,
+    lng: DEFAULT_COORDINATES.lng
+  });
 
   useEffect(() => {
     if (!isOpen) return;
+
+    getCurrentGPSPosition().then(pos => {
+      setUserPos(pos);
+    }).catch(() => {
+      // Keep default
+    });
+
     const interval = setInterval(() => {
       setSpeed(prev => Math.floor(40 + Math.random() * 15));
     }, 2000);
@@ -39,6 +44,23 @@ export const TacticalGPSModal: React.FC<TacticalGPSModalProps> = ({
   }, [isOpen]);
 
   if (!isOpen || !incident) return null;
+
+  // Calculate approximate distance in KM between userPos and incident
+  const R = 6371; // Earth radius in KM
+  const dLat = (incident.location.lat - userPos.lat) * Math.PI / 180;
+  const dLng = (incident.location.lng - userPos.lng) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(userPos.lat * Math.PI / 180) * Math.cos(incident.location.lat * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanceKm = (R * c).toFixed(1);
+
+  const navigationSteps = [
+    { instruction: `Proceed towards ${incident.location.address || incident.location.area}`, distance: `${distanceKm} km` },
+    { instruction: `Follow emergency vehicle corridor`, distance: `${(parseFloat(distanceKm) * 0.6).toFixed(1)} km` },
+    { instruction: `Merge onto response route near ${incident.location.area}`, distance: "300m" },
+    { instruction: `ARRIVING: ${incident.title} site on left`, distance: "50m" },
+  ];
 
   const handleSelect = (inc: Incident) => {
     if (onSelectIncident) {
@@ -48,7 +70,7 @@ export const TacticalGPSModal: React.FC<TacticalGPSModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[3000] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto font-sans">
-      <div className="eoc-card max-w-4xl w-full rounded-2xl border border-cyan-500/60 shadow-2xl p-6 relative my-6 space-y-4">
+      <div className="eoc-card max-w-4xl w-full rounded-2xl border border-cyan-500/60 shadow-2xl p-6 relative m-auto space-y-4">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -58,7 +80,7 @@ export const TacticalGPSModal: React.FC<TacticalGPSModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-extrabold text-white">Tactical Field GPS Turn-By-Turn Navigation</h2>
-              <p className="text-xs text-slate-400 font-mono">Real-time Emergency Dispatch Telemetry</p>
+              <p className="text-xs text-slate-400 font-mono">Live Dispatch Telemetry & Position Tracking</p>
             </div>
           </div>
 
@@ -79,7 +101,7 @@ export const TacticalGPSModal: React.FC<TacticalGPSModalProps> = ({
 
           <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
             <div className="text-[10px] text-slate-400">EST. DISTANCE</div>
-            <div className="font-bold text-amber-400 text-sm mt-0.5">2.4 KM</div>
+            <div className="font-bold text-amber-400 text-sm mt-0.5">{distanceKm} KM</div>
           </div>
 
           <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
@@ -89,7 +111,9 @@ export const TacticalGPSModal: React.FC<TacticalGPSModalProps> = ({
 
           <div className="p-3 bg-slate-900 rounded-xl border border-slate-800">
             <div className="text-[10px] text-slate-400">ESTIMATED ETA</div>
-            <div className="font-bold text-emerald-400 text-sm mt-0.5">4 MINUTES</div>
+            <div className="font-bold text-emerald-400 text-sm mt-0.5">
+              {Math.max(1, Math.round((parseFloat(distanceKm) / speed) * 60))} MINS
+            </div>
           </div>
         </div>
 

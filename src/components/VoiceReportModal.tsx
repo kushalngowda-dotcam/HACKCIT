@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Incident } from '../types';
-import { Mic, MicOff, X, Sparkles, CheckCircle2, AlertTriangle, Send, RefreshCw, Volume2 } from 'lucide-react';
+import { Mic, MicOff, X, Sparkles, CheckCircle2, AlertTriangle, Send, RefreshCw, Volume2, MapPin } from 'lucide-react';
 import { analyzeIncidentReport, verifyIncidentReport, calculatePriorityScore } from '../services/aiEngine';
 import { DISASTER_IMAGES } from '../utils/svgImages';
+import { getGPSLocationWithAddress, DEFAULT_COORDINATES } from '../utils/geolocation';
 
 interface VoiceReportModalProps {
   isOpen: boolean;
@@ -25,11 +26,27 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
   } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number; address: string; area: string }>({
+    lat: DEFAULT_COORDINATES.lat,
+    lng: DEFAULT_COORDINATES.lng,
+    address: 'Capturing GPS Location...',
+    area: 'Local Sector'
+  });
+
   useEffect(() => {
     if (!isOpen) {
       setIsRecording(false);
       setTranscript('');
       setAiParsing(null);
+    } else {
+      getGPSLocationWithAddress().then(loc => {
+        setGpsLocation({
+          lat: loc.lat,
+          lng: loc.lng,
+          address: loc.address,
+          area: loc.area
+        });
+      });
     }
   }, [isOpen]);
 
@@ -40,7 +57,6 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
     setTranscript('');
     setAiParsing(null);
 
-    // Check if Web Speech API SpeechRecognition is available in browser
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (SpeechRecognition) {
@@ -57,11 +73,10 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
       };
 
       recognition.onerror = () => {
-        // Fallback demo transcript if microphone access is denied or error
         setTimeout(() => {
-          setTranscript("There is a building collapse near the metro station exit. People may be trapped on the second floor.");
+          setTranscript("There is a building collapse near the metro station exit. People may be trapped inside.");
           setIsRecording(false);
-          processVoiceTranscript("There is a building collapse near the metro station exit. People may be trapped on the second floor.");
+          processVoiceTranscript("There is a building collapse near the metro station exit. People may be trapped inside.");
         }, 1500);
       };
 
@@ -71,9 +86,8 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
 
       recognition.start();
     } else {
-      // Demo Voice Simulation fallback if browser speech API is unavailable
       setTimeout(() => {
-        const demoText = "There is a severe building collapse near the metro station exit. Multiple people trapped inside!";
+        const demoText = "There is an emergency building collapse near the station. Multiple citizens affected.";
         setTranscript(demoText);
         setIsRecording(false);
         processVoiceTranscript(demoText);
@@ -90,7 +104,7 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
       setAiParsing({
         incidentType: result.incident_type,
         severity: result.severity,
-        potentialRisk: result.detected_hazards[0] || 'Citizens exposed to structural collapse hazard',
+        potentialRisk: result.detected_hazards[0] || 'Citizens exposed to hazardous conditions',
         peopleAtRisk: result.estimated_people_affected
       });
     } catch (err) {
@@ -98,7 +112,7 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
         incidentType: 'Building Collapse',
         severity: 'CRITICAL',
         potentialRisk: 'People trapped inside damaged structure',
-        peopleAtRisk: 86
+        peopleAtRisk: 45
       });
     } finally {
       setIsProcessing(false);
@@ -125,35 +139,35 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
 
     const newInc: Incident = {
       id: `inc-voice-${Date.now()}`,
-      title: `VOICE REPORT: ${aiParsing?.incidentType || 'Emergency'} near Metro Exit`,
+      title: `VOICE REPORT: ${aiParsing?.incidentType || 'Emergency'}`,
       description: `[Voice Transcript]: "${transcript}"`,
       incident_type: aiParsing?.incidentType || 'Building Collapse',
-      severity: aiParsing?.severity || 'CRITICAL',
+      severity: aiParsing?.severity || 'HIGH',
       status: 'VERIFIED',
       priority_score: priority.score,
-      confidence: 94,
+      confidence: 90,
       verification_status: verification.status,
       verification_score: verification.score,
-      people_at_risk: aiParsing?.peopleAtRisk || 65,
+      people_at_risk: aiParsing?.peopleAtRisk || 45,
       location: {
-        lat: 12.9716 + (Math.random() - 0.5) * 0.02,
-        lng: 77.5946 + (Math.random() - 0.5) * 0.02,
-        address: 'MG Road Metro Station Voice Beacon',
-        area: 'Central Emergency District'
+        lat: gpsLocation.lat,
+        lng: gpsLocation.lng,
+        address: gpsLocation.address,
+        area: gpsLocation.area
       },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       image_url: DISASTER_IMAGES.buildingCollapse,
-      detected_hazards: ['Trapped Victims', 'Structural Debris Risk'],
-      infrastructure_damage: ['Building Load Failure'],
+      detected_hazards: ['Voice Emergency Signal', 'Unverified Field Damage'],
+      infrastructure_damage: ['Locality Hazard'],
       recommended_resources: [
-        { type: 'RESCUE_TEAM', count: 3 },
-        { type: 'AMBULANCE', count: 2 }
+        { type: 'RESCUE_TEAM', count: 2 },
+        { type: 'AMBULANCE', count: 1 }
       ],
-      recommended_actions: ['Deploy search & rescue squad immediately'],
+      recommended_actions: ['Deploy first responder squad to GPS location'],
       assigned_resources: [],
       eta_minutes: 6,
-      reasoning: 'Voice emergency report transcribed and verified via AI NLP parsing engine.'
+      reasoning: 'Voice emergency report recorded with real browser GPS coordinates.'
     };
 
     onAddIncident(newInc);
@@ -162,7 +176,7 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[3200] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto font-sans">
-      <div className="bg-white max-w-lg w-full rounded-2xl border border-teal-200 shadow-2xl p-6 relative my-8 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white max-w-lg w-full rounded-2xl border border-teal-200 shadow-2xl p-6 relative m-auto space-y-5">
         
         {/* Close Button */}
         <button
@@ -179,8 +193,14 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
           </div>
           <div>
             <h3 className="font-extrabold text-base text-slate-800">Voice Emergency Reporting</h3>
-            <p className="text-xs text-slate-500 font-mono">Speak your emergency — AI converts voice to dispatch directives</p>
+            <p className="text-xs text-slate-500 font-mono">Speak your emergency — captures live GPS coordinates</p>
           </div>
+        </div>
+
+        {/* Location Indicator */}
+        <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 text-xs text-slate-600 font-mono">
+          <MapPin className="w-4 h-4 text-red-500 shrink-0" />
+          <span className="truncate">{gpsLocation.address} ({gpsLocation.lat.toFixed(4)}, {gpsLocation.lng.toFixed(4)})</span>
         </div>
 
         {/* Voice Microphone Recorder Box */}
@@ -210,7 +230,7 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
 
         {/* I HEARD Box */}
         {transcript && (
-          <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-1 shadow-2xs">
+          <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-1">
             <div className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider flex items-center justify-between">
               <span>I HEARD:</span>
               <span className="text-teal-600">SPEECH TO TEXT</span>
@@ -223,13 +243,13 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
         {isProcessing ? (
           <div className="p-4 bg-teal-50 rounded-xl border border-teal-200 text-center text-xs font-mono text-teal-700 space-y-2">
             <RefreshCw className="w-5 h-5 animate-spin mx-auto text-teal-600" />
-            <div>AI Vision & Speech NLP Parsing Emergency Cues...</div>
+            <div>Parsing Speech Cues & Live GPS...</div>
           </div>
         ) : aiParsing && (
           <div className="p-4 bg-teal-50 rounded-xl border border-teal-200 space-y-2 text-xs font-sans">
             <div className="text-xs font-bold text-teal-800 font-mono flex items-center space-x-1.5">
               <Sparkles className="w-4 h-4 text-teal-600" />
-              <span>AI UNDERSTANDING</span>
+              <span>EMERGENCY SUMMARY</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs font-mono">
@@ -243,20 +263,12 @@ export const VoiceReportModal: React.FC<VoiceReportModalProps> = ({
                 <div className="font-extrabold text-red-600 mt-0.5">{aiParsing.severity}</div>
               </div>
             </div>
-
-            <div className="p-2 bg-white rounded-lg border border-teal-100 text-xs text-slate-700">
-              <strong>Potential Risk:</strong> {aiParsing.potentialRisk} ({aiParsing.peopleAtRisk} citizens affected)
-            </div>
           </div>
         )}
 
         {/* Question & Confirm CTA */}
         {aiParsing && (
           <div className="space-y-3 pt-2 border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-800 text-center">
-              Would you like to submit this emergency report?
-            </p>
-
             <div className="flex items-center justify-end space-x-2">
               <button
                 onClick={onClose}

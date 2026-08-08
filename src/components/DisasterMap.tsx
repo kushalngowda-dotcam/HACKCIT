@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, Circle, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Incident, Resource, Hospital, Shelter, RoadBlockage, EvacuationRoute, AIRiskZone } from '../types';
-import { INITIAL_RISK_ZONES } from '../data/mockData';
 import { Layers, ShieldAlert, Sparkles, Truck } from 'lucide-react';
 
 import 'leaflet/dist/leaflet.css';
@@ -100,7 +99,7 @@ export const DisasterMap: React.FC<DisasterMapProps> = ({
   shelters,
   blockages,
   routes,
-  riskZones = INITIAL_RISK_ZONES,
+  riskZones: passedRiskZones,
   selectedIncident,
   onSelectIncident,
   onSelectResource,
@@ -109,9 +108,30 @@ export const DisasterMap: React.FC<DisasterMapProps> = ({
 }) => {
   const [showRiskLayer, setShowRiskLayer] = useState<boolean>(true);
 
+  // Derive risk zones dynamically from active high/critical severity DB incidents if none passed
+  const activeRiskZones = useMemo<AIRiskZone[]>(() => {
+    if (passedRiskZones && passedRiskZones.length > 0) return passedRiskZones;
+    return incidents
+      .filter(inc => inc.severity === 'CRITICAL' || inc.severity === 'HIGH')
+      .map(inc => ({
+        id: `risk-zone-${inc.id}`,
+        name: `${inc.incident_type} Vulnerability Zone`,
+        level: inc.severity,
+        population_exposure: inc.people_at_risk,
+        vulnerabilities: inc.detected_hazards || ['High Population Density'],
+        potentialEscalation: 'Cascading infrastructure impact',
+        potential_escalation: 'Cascading infrastructure impact',
+        recommended_precaution: inc.recommended_actions[0] || 'Maintain 200m perimeter',
+        center: [inc.location.lat, inc.location.lng] as [number, number],
+        radius: inc.severity === 'CRITICAL' ? 1200 : 800
+      }));
+  }, [incidents, passedRiskZones]);
+
   const center: [number, number] = selectedIncident 
     ? [selectedIncident.location.lat, selectedIncident.location.lng]
-    : [12.9716, 77.5946];
+    : incidents.length > 0
+      ? [incidents[0].location.lat, incidents[0].location.lng]
+      : [12.9716, 77.5946];
 
   return (
     <div className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-200 shadow-md z-0 font-sans">
@@ -145,7 +165,7 @@ export const DisasterMap: React.FC<DisasterMapProps> = ({
         />
 
         {/* Feature 4: AI Risk Layer (Rendered as translucent heatmap circles when active) */}
-        {showRiskLayer && riskZones.map(zone => {
+        {showRiskLayer && activeRiskZones.map(zone => {
           const color = zone.level === 'CRITICAL' ? '#ef4444' : zone.level === 'HIGH' ? '#f97316' : '#eab308';
           return (
             <Circle

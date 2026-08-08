@@ -50,15 +50,15 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ incidents }) => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-65px)] bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
-      
+    <div className="min-h-full bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
+
       {/* Header Banner */}
       <div className="eoc-card p-6 rounded-2xl border border-slate-800 space-y-3">
         <div className="flex items-center space-x-2 text-cyan-400 font-mono text-xs">
           <Clock className="w-4 h-4" />
           <span>FUTURE VISION TIMELINE FORECASTER</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-white">AI Future Vision Timeline</h1>
+        <h1 className="text-2xl font-extrabold text-slate-800">AI Future Vision Timeline</h1>
         <p className="text-xs text-slate-400 max-w-3xl">
           Drag or click the temporal slider to project environmental escalation, affected population, hospital pressure, and resource demand over a 12-hour operational horizon.
         </p>
@@ -77,11 +77,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ incidents }) => {
               <button
                 key={opt.hours}
                 onClick={() => setSelectedHours(opt.hours)}
-                className={`flex-1 min-w-[100px] py-3 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer ${
-                  selectedHours === opt.hours
+                className={`flex-1 min-w-[100px] py-3 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer ${selectedHours === opt.hours
                     ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400 shadow-lg shadow-cyan-500/20 scale-105'
                     : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:border-slate-700'
-                }`}
+                  }`}
               >
                 {opt.label}
               </button>
@@ -96,7 +95,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ incidents }) => {
             step="1"
             value={selectedHours}
             onChange={(e) => setSelectedHours(parseInt(e.target.value))}
-            className="w-full accent-cyan-400 cursor-pointer pt-2"
+            style={{ ['--fill' as string]: `${(selectedHours / 12) * 100}%` }}
+            className="range-slider-cyan cursor-pointer"
           />
         </div>
       </div>
@@ -133,7 +133,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ incidents }) => {
 
         {/* Metric Projections Grid (All 6 required metrics) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 font-mono">
-          
+
           {/* 1. Affected Population */}
           <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-1">
             <div className="flex items-center space-x-2 text-slate-400 text-xs">

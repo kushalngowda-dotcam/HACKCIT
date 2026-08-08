@@ -76,7 +76,7 @@ export const CounterfactualSimulatorView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-65px)] bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
+    <div className="min-h-full bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
       
       {/* Header Banner */}
       <div className="eoc-card p-6 rounded-2xl border border-slate-800 space-y-2">
@@ -84,7 +84,7 @@ export const CounterfactualSimulatorView: React.FC = () => {
           <Sliders className="w-4 h-4" />
           <span>COUNTERFACTUAL RESCUE SIMULATOR</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-white">What If We Chose Differently?</h1>
+        <h1 className="text-2xl font-extrabold text-slate-800">What If We Chose Differently?</h1>
         <p className="text-xs text-slate-400 max-w-3xl">
           Evaluate alternative tactical decisions side-by-side to compare arrival times, hospital pressure, and resource burnout before committing response forces.
         </p>

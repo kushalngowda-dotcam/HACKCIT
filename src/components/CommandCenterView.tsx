@@ -79,14 +79,14 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   } : null;
 
   return (
-    <div className="h-[calc(100vh-65px)] bg-slate-50 p-3 gap-3 grid grid-cols-1 lg:grid-cols-12 overflow-hidden font-sans">
+    <div className="h-full bg-slate-50 p-3 gap-3 grid grid-cols-1 lg:grid-cols-12 overflow-y-auto overflow-x-hidden font-sans">
       
       {/* Left Main Map & Detail Section (8 cols) */}
-      <div className="lg:col-span-8 flex flex-col h-full space-y-3">
+      <div className="lg:col-span-8 flex flex-col space-y-3 lg:h-full lg:min-h-0 min-h-0">
         
         {/* Top Control Bar with PROMINENT ACTIVATE CRISIS MODE BUTTON */}
-        <div className="eoc-card p-2.5 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-center space-x-2 flex-1 min-w-[200px]">
+        <div className="eoc-card p-2.5 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-sm shrink-0">
+          <div className="flex items-center space-x-2 flex-1 min-w-[200px] max-w-full">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
@@ -134,7 +134,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         </div>
 
         {/* Interactive GIS Map */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-h-[50vh] lg:min-h-0">
           <DisasterMap
             incidents={filteredIncidents}
             resources={resources}
@@ -215,9 +215,9 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
       </div>
 
       {/* Right AI Priority Queue & Emergency Alerts (4 cols) */}
-      <div className="lg:col-span-4 flex flex-col h-full space-y-3">
+      <div className="lg:col-span-4 flex flex-col lg:h-full lg:min-h-0 space-y-3 min-h-0">
         {/* Priority Queue Component */}
-        <div className="flex-1 overflow-hidden">
+        <div className="lg:flex-1 lg:overflow-hidden max-h-[60vh] lg:max-h-none">
           <AIPriorityQueue
             incidents={filteredIncidents}
             selectedIncident={selectedIncident}

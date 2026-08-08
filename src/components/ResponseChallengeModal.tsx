@@ -78,7 +78,7 @@ export const ResponseChallengeModal: React.FC<ResponseChallengeModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[3600] bg-red-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto font-sans">
-      <div className="bg-slate-950 max-w-2xl w-full rounded-2xl border-2 border-red-500 shadow-2xl p-6 relative my-8 text-white space-y-5 animate-in zoom-in-95 duration-200">
+      <div className="bg-slate-950 max-w-2xl w-full rounded-2xl border-2 border-red-500 shadow-2xl p-6 relative m-auto text-white space-y-5 animate-in zoom-in-95 duration-200">
         
         {/* Close Button */}
         <button
@@ -114,7 +114,7 @@ export const ResponseChallengeModal: React.FC<ResponseChallengeModalProps> = ({
         </div>
 
         {/* Step Stepper Progress Bar */}
-        <div className="grid grid-cols-6 gap-1.5 font-mono text-[10px] text-center">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 font-mono text-[10px] text-center">
           {challengeSteps.map(s => {
             const isActive = activeStep === s.step;
             const isDone = activeStep > s.step || isCompleted;

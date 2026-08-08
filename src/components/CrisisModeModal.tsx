@@ -47,7 +47,7 @@ export const CrisisModeModal: React.FC<CrisisModeModalProps> = ({
   return (
     <>
       <div className="fixed inset-0 z-[3200] bg-red-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto font-sans">
-        <div className="bg-white max-w-3xl w-full rounded-2xl border-2 border-red-500 shadow-2xl p-6 relative my-8 space-y-5 animate-in zoom-in-95 duration-200">
+        <div className="bg-white max-w-3xl w-full rounded-2xl border-2 border-red-500 shadow-2xl p-6 relative m-auto space-y-5 animate-in zoom-in-95 duration-200">
           
           {/* Close Button */}
           <button

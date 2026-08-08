@@ -5,3 +5,6 @@ dist/
 .env.*
 .DS_Store
 npm-debug.log*
+
+# cgraph index (machine-specific, regenerated)
+.cgraph/

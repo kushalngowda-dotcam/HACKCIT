@@ -87,7 +87,7 @@ export const CascadingDisasterGraphView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-65px)] bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
+    <div className="min-h-full bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6 font-sans">
       
       {/* Header Banner */}
       <div className="eoc-card p-6 rounded-2xl border border-slate-800 space-y-2">
@@ -95,7 +95,7 @@ export const CascadingDisasterGraphView: React.FC = () => {
           <Network className="w-4 h-4" />
           <span>CASCADING DISASTER INTELLIGENCE GRAPH</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-white">Cascading Disaster Dependency Graph</h1>
+        <h1 className="text-2xl font-extrabold text-slate-800">Cascading Disaster Dependency Graph</h1>
         <p className="text-xs text-slate-400 max-w-3xl">
           Visualizes how primary weather events trigger multi-tier systemic failures across hydrology, transit, hospital load, and evacuation surge. Click any node to inspect downstream impacts.
         </p>

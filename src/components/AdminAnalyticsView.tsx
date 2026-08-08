@@ -40,7 +40,7 @@ export const AdminAnalyticsView: React.FC<AdminAnalyticsViewProps> = ({
   ];
 
   return (
-    <div className="min-h-[calc(100vh-65px)] bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-full bg-[#070a10] p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       
       {/* Header */}
       <div className="eoc-card p-6 rounded-2xl border border-slate-800 space-y-2">
@@ -48,7 +48,7 @@ export const AdminAnalyticsView: React.FC<AdminAnalyticsViewProps> = ({
           <BarChart3 className="w-4 h-4" />
           <span>GOVERNMENT EXECUTIVE DIRECTIVE DASHBOARD</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-white">Disaster Intelligence Analytics</h1>
+        <h1 className="text-2xl font-extrabold text-slate-800">Disaster Intelligence Analytics</h1>
         <p className="text-xs text-slate-400">
           Executive reporting on response performance, hospital bed pressure, fleet utilization, and regional risk indices.
         </p>
